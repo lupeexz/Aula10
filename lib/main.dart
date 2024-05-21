@@ -1,125 +1,155 @@
 import 'package:flutter/material.dart';
+// Importando o pacote material, que contém os widgets do Flutter
+import 'package:aula10crud/DatabaseHelper.dart';
+// Importando o arquivo database_helper.dart para gerenciar o banco de dados
+import 'package:aula10crud/task_model.dart';
+// Importando o arquivo task_model.dart que define o modelo de tarefa
 
-void main() {
-  runApp(const MyApp());
-}
+void main() =>
+    runApp(MyApp()); // Função principal que inicializa o aplicativo Flutter
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  // This widget is the root of your application.
+  // Classe MyApp que herda de StatelessWidget
   @override
   Widget build(BuildContext context) {
+    // Método build que retorna o widget principal do aplicativo
     return MaterialApp(
-      title: 'Flutter Demo',
+      // MaterialApp: Widget que define as configurações gerais do aplicativo
+      title: 'CRUD with SQLite', // Título do aplicativo
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
+        // Tema do aplicativo
+        primarySwatch: Colors.green, // Cor primária do tema
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: TaskListScreen(), // Tela inicial do aplicativo
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
+class TaskListScreen extends StatefulWidget {
+  // Classe TaskListScreen que herda de StatefulWidget
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  _TaskListScreenState createState() =>
+      _TaskListScreenState(); // Cria uma instância do estado para TaskListScreen
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
+class _TaskListScreenState extends State<TaskListScreen> {
+  // Classe privada que gerencia o estado da tela TaskListScreen
+  final dbHelper =
+      DatabaseHelper.instance; // Instância do helper do banco de dados
+  final TextEditingController titleController =
+      TextEditingController(); // Controlador para o campo de título
+  final TextEditingController descriptionController =
+      TextEditingController(); // Controlador para o campo de descrição
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
+    // Método build que retorna o widget da tela TaskListScreen
     return Scaffold(
+      // Scaffold: Widget responsável por criar um layout "padrão" para a tela
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        // AppBar: Barra localizada na parte superior da tela
+        title: Text('Aprendendo um CRUD com SQLite'), // Título da AppBar
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
+      body: FutureBuilder<List<Tarefa>>(
+        // FutureBuilder: Widget que constrói um widget baseado em um Future
+        future: dbHelper
+            .fetchTarefa(), // Future que busca as tarefas do banco de dados
+        builder: (context, snapshot) {
+          // Construtor do widget baseado no Future
+          if (!snapshot.hasData) {
+            // Verifica se os dados ainda não foram carregados
+            return Center(
+                child:
+                    CircularProgressIndicator()); // Mostra um indicador de progresso
+          }
+
+          return ListView.builder(
+            /* ListView.builder: Widget que constrói uma lista de itens de 
+            acordo com os dados*/
+            itemCount: snapshot.data!.length, // Número total de itens na lista
+            itemBuilder: (context, index) {
+              // Construtor de itens da lista
+              return ListTile(
+                // ListTile: Widget que define um item de lista
+                title: Text(snapshot.data![index].titulo), // Título do item
+                subtitle:
+                    Text(snapshot.data![index].descricao), // Descrição do item
+                trailing: IconButton(
+                  // Botão de ação à direita do item
+                  icon: Icon(Icons.delete), // Ícone do botão
+                  onPressed: () {
+                    // Ação ao pressionar o botão
+                    dbHelper.deleteTarefa(snapshot.data![index]
+                        .id!); // Deleta a tarefa selecionada do banco de dados
+                    setState(() {}); // Atualiza a interface
+                  },
+                ),
+              );
+            },
+          );
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        // FloatingActionButton: Botão flutuante na parte inferior da tela
+        child: Icon(Icons.add), // Ícone do botão
+        onPressed: () => _showTaskDialog(), // Ação ao pressionar o botão
+      ),
+    );
+  }
+
+  _showTaskDialog() async {
+    // Método assíncrono para mostrar o diálogo de adição de tarefa
+    await showDialog(
+      // showDialog: Função que exibe um diálogo
+      context: context, // Contexto do aplicativo
+      builder: (context) => AlertDialog(
+        // AlertDialog: Diálogo de alerta
+        title: Text('Nova Tarefa'), // Título do diálogo
+        content: Column(
+          // Conteúdo do diálogo
+          mainAxisSize: MainAxisSize.min, // Tamanho mínimo do conteúdo
+          children: [
+            TextField(
+              // Campo de texto para o título da tarefa
+              controller: titleController, // Controlador do campo de texto
+              decoration: InputDecoration(
+                  labelText: 'Título'), // Decoração do campo de texto
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+            TextField(
+              // Campo de texto para a descrição da tarefa
+              controller:
+                  descriptionController, // Controlador do campo de texto
+              decoration: InputDecoration(
+                  labelText: 'Descrição'), // Decoração do campo de texto
             ),
           ],
         ),
+        actions: [
+          // Ações do diálogo
+          TextButton(
+            // Botão de cancelar
+            child: Text('Cancelar'), // Texto do botão
+            onPressed: () =>
+                Navigator.pop(context), // Ação ao pressionar o botão
+          ),
+          TextButton(
+            // Botão de salvar
+            child: Text('Salvar'), // Texto do botão
+            onPressed: () {
+              // Ação ao pressionar o botão
+              final tarefa = Tarefa(
+                // Cria uma nova tarefa com os dados inseridos
+                titulo: titleController.text, // Título da tarefa
+                descricao: descriptionController.text, // Descrição da tarefa
+              );
+              dbHelper.insertTarefa(
+                  tarefa); // Insere a nova tarefa no banco de dados
+              setState(() {}); // Atualiza a interface
+              Navigator.pop(context); // Fecha o diálogo
+            },
+          ),
+        ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
